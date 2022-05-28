@@ -1,0 +1,380 @@
+SQL SCRIPT including all the queries
+create database Swiggy;
+
+use swiggy ;
+
+create table SwiggyPreSales
+( DT char(20),
+ID Int, 
+City int,
+NAME char(100),
+ITEM_ID int,
+ITEM_NAME char(50),
+HR_of_day int,
+orders int , 
+QTY int , 
+ITEM_GMV int,
+Category char(50),
+extra_info int);
+
+
+create table SwiggyPostSales
+( DT char(20),
+ID Int, 
+City int,
+NAME char(100),
+ITEM_ID int,
+ITEM_NAME char(50),
+HR_of_day int,
+orders int , 
+QTY int , 
+ITEM_GMV int,
+Category char(50) );
+
+select * from swiggypresales LIMIT 20;
+select * from swiggypostsales LIMIT 20;
+
+/* convert date column to default MySQL date format */
+select str_to_date(DT, "%d-%m-%Y") as new_DATE , DT 
+from swiggypresales;
+
+UPDATE swiggypresales
+SET DT = str_to_date(DT, "%d-%m-%Y");
+
+select Distinct DT
+from swiggypresales
+order by DT;
+
+select Distinct DT
+from swiggypostsales
+order by DT;
+
+
+/* ------ */
+select ITEM_name , ITEM_ID
+from swiggypresales
+order by ITEM_NAME;
+
+select ITEM_name , ITEM_ID
+from swiggypresales
+order by ITEM_ID;
+
+
+select City, name
+from swiggypresales
+order by CIty;
+
+alter table swiggypresales
+add constraint pre_PK primary key (ID,DT, ITEM_ID, HR_of_day,city) ; /* gave error */
+
+select ID, DT, City, Count(*) as cnt from swiggypresales group by ID, DT , City   ; 
+
+/* no pk, so assign orderID */
+
+Alter table swiggypresales 
+add orderID int NOT NULL auto_increment primary key ;
+
+Alter table swiggypostsales 
+add orderID int NOT NULL auto_increment primary key ;
+
+select * from swiggypresales limit 2 ;
+select * from swiggypostsales limit 2 ;
+/*----------------------------------------------------------*/
+/*SALES*/
+
+/*orders/sales pre diwali -- 187677 */
+
+select count(orderID) from swiggypresales;
+
+/*orders/sales post  diwali  -- 267488*/
+select count(orderID) from swiggypostsales;
+
+/*orders/sales each day pre diwali */
+select DT, count(DT) as orders_per_day from swiggypresales group by DT order by DT;
+
+/*orders/sales each day post diwali */
+select DT, count(DT) as orders_per_day from swiggypostsales group by DT order by DT;
+
+/*2*/
+
+/* max sales on which day before diwali */
+select DT , count(DT) as totalsales_thatday
+from swiggypresales
+group by DT 
+order by 2 DESC limit 1; 
+
+/* max sales on which day after diwali */
+select DT , count(*) as totalsales_thatday
+from swiggypostsales
+group by DT 
+order by 2 DESC limit 1; 
+
+/*3*/
+
+/*which city has max sales before diwali */
+select city , count(*) as totalsales_thatday
+from swiggypresales
+group by City
+order by 2 DESC limit 1;
+
+/*which city has max sales after diwali */
+select city , count(*) as totalsales_thatday
+from swiggypostsales
+group by City
+order by 2 DESC Limit 1;
+
+/*new 5678489 city*/
+ 
+/* total no. of cities in which sales happened pre diwali */ 
+select count(distinct City) from swiggypresales;
+
+/* total no. of cities in which sales happened post diwali */ 
+select count(distinct City) from swiggypostsales;
+
+/* so cities where sales happened after diwali but not before*/
+select distinct city , NAME as outletname from swiggypostsales where city not in (select city from swiggypresales) ;
+
+/* so cities where sales happened before diwali but not after*/
+select distinct city , NAME as outletname from swiggypresales where city not in (select city from swiggypostsales) ;
+
+/* 4 */
+
+/* which city has max sale on the day the sale was max pre diwali */
+
+select DT , count(*) as totalsales_thatday, city
+from swiggypresales
+group by DT , city
+order by 2 desc  ; 
+
+select DT , count(*) as totalsales_thatday, city
+from swiggypresales
+group by DT , city
+order by 2 desc limit 1 ; 
+
+/* which city has max sale on the day the sale was max post diwali */
+
+select DT , count(*) as totalsales_thatday, city
+from swiggypostsales
+group by DT , city
+order by 2 desc  limit 10; 
+
+select DT , count(*) as totalsales_thatday, city
+from swiggypostsales
+group by DT 
+order by 2 desc  limit 1 ;
+
+/* which outlet did most sales pre diwali */
+select name , count(name) 
+from swiggypresales
+group by NAME 
+order by 2 Desc limit 10 ;
+
+select name , count(name) 
+from swiggypresales
+group by NAME 
+order by 2 Desc limit 1 ;
+
+/* which outlet did most sales post diwali */
+select name , count(name) 
+from swiggypostsales
+group by NAME 
+order by 2 Desc limit 10 ;
+
+select name , count(name) 
+from swiggypostsales
+group by NAME 
+order by 2 Desc limit 1 ;
+
+/* at which hour most sales happened before diwali */
+
+select hr_of_Day, count(*) 
+from swiggypresales
+group by hr_of_Day 
+order by 2 Desc limit 10 ;
+
+/* at which hour most sales happened after diwali */
+
+select hr_of_Day, count(*) 
+from swiggypostsales
+group by hr_of_Day 
+order by 2 Desc limit 10 ;
+
+/* at which hour most sales happened pre diwali and of which category */
+
+select hr_of_Day, count(*) , category
+from swiggypresales
+group by hr_of_Day , category
+order by count(*) DEsc limit 10 ;
+
+/* at which hour most sales happened post diwali and of which category */
+
+select hr_of_Day, count(*) , category
+from swiggypostsales
+group by hr_of_Day , category
+order by count(*) DEsc limit 10 ;
+
+/*--------------------------------------------------------------------------*/
+/*REVENUE*/
+
+/*total revenue generated pre diwali */
+
+select orderid , id , orders, item_GMV, (orders * item_GMV) as revenue from swiggypresales limit 10;
+
+select sum(orders * item_GMV) as total_revenue from swiggypresales  ;
+
+/*total revenue generated post diwali */
+
+select orderid , id , orders, item_GMV, (orders * item_GMV) as revenue from swiggypostsales limit 10;
+
+select sum(orders * item_GMV) as total_revenue from swiggypostsales  ;
+
+/*2*/
+
+/* max revenue  on which day before diwali */
+select DT, sum(orders * item_GMV) as revenue_per_Day
+from swiggypresales
+group by DT
+order by 2 DESC limit 10; 
+
+/* max revenue  on which day after diwali */
+select DT, sum(orders * item_GMV) as revenue_per_Day
+from swiggypostsales
+group by DT
+order by 2 DESC limit 10; 
+
+
+/*3 */
+/* which outlet earned most pre diwali */
+select name , sum(orders * item_GMV) as revenue_per_outlet
+from swiggypresales
+group by NAME 
+order by 2 Desc limit 10 ;
+
+/* which outlet earned most post diwali */
+select name , sum(orders * item_GMV) as revenue_per_outlet
+from swiggypostsales
+group by NAME 
+order by 2 Desc limit 10 ;
+
+/*new 87079*/
+/* haldiram's earned the most at which hr on 11th oct*/
+
+select sum(orders * item_GMV) as revenue , hr_of_day , dt , name
+from swiggypresales
+where DT = "2019-10-11" and name = "Haldiram's" 
+group by hr_of_day
+order by 1 desc limit 10 ;
+
+/* haldiram's earned the most at which hr on 28th oct*/
+
+select sum(orders * item_GMV) as revenue , hr_of_day , dt , name
+from swiggypostsales
+where DT = "2019-10-28" and name = "Haldiram's" 
+group by hr_of_day
+order by 1 desc limit 10 ;
+
+/*--------------------------------------------------------------------------*/
+/* CATEGORY */
+/*sweets ordered before diwali */
+
+select category , sum(orders)  as orders
+from swiggypresales 
+where category like "%sweets%" ; 
+
+/*sweets ordered post diwali */
+
+select category , sum(orders)  as orders
+from swiggypostsales 
+where category like "%sweets%" ;
+
+/*2*/
+
+/*gifts ordered pre diwali */
+select  sum(orders)  as gift_orders from swiggypresales where category like "%gift%" order by category ;
+
+ /*gifts ordered post diwali */
+ select  sum(orders)  as gift_orders from swiggypostsales where category like "%gift%" order by category ;
+ 
+ /*3*/
+ /*In sweets which item was ordered the most pre diwali */
+ select item_name, count(*) as item_orders , category
+ from swiggypresales 
+ where category like "%sweets%" 
+ group by item_name 
+ order by 2 desc , orders desc limit 10 ;
+ 
+ /*In sweets which item was ordered the most post diwali */
+ select item_name, count(*) as item_orders , category
+ from swiggypostsales 
+ where category like "%sweets%" 
+ group by item_name 
+ order by 2 desc , orders desc limit 10 ;
+ 
+/*4*/
+/*In sweets which item was ordered the least pre diwali */
+select item_name, count(*) as item_orders , category 
+from swiggypresales 
+where category like "%sweets%" 
+ group by item_name 
+ Having count(*) >=2 
+ order by 2 limit 5 ;
+ 
+ /*In sweets which item was ordered the least post diwali */
+ select item_name, count(*) as item_orders , category 
+ from swiggypostsales 
+ where category like "%sweets%" 
+ group by item_name 
+ Having count(*) >=2 
+ order by 2 limit 5 ;
+
+/*5*/
+
+/*which category was sold the most pre diwali during the day*/
+
+select category , count(*) as category_ordered , hr_of_day
+from swiggypresales 
+group by category
+having  hr_of_Day between 9 and 14
+order by 2 desc limit 10 ;
+
+/*which category was sold the most pre diwali in evening*/
+
+select category , count(*) as category_ordered , hr_of_day
+from swiggypresales 
+group by category
+having  hr_of_Day between 17 and 23
+order by 2 desc limit 10 ;
+
+/*which category was sold the most post diwali during the day*/
+
+select category , count(*) as category_ordered , hr_of_day
+from swiggypostsales 
+group by category
+having  hr_of_Day between 9 and 14
+order by 2 desc limit 10 ;
+
+/*which category was sold the most post diwali in evening*/
+select category , count(*) as category_ordered , hr_of_day
+from swiggypostsales 
+group by category
+having  hr_of_Day between 17 and 23
+order by 2 desc limit 10 ;
+
+/*--------------------------------------------------------------------------*/
+/*ITEMS*/
+
+/*which item was sold the most pre diwali*/
+
+select item_name, count(*) as sold
+from swiggypresales
+group by item_name
+order by 3 desc 
+limit 10 ;
+
+/*which item was sold the most post diwali*/
+
+select item_name,  count(*) as sold
+from swiggypostsales
+group by item_name
+order by 3 desc 
+limit 10 ;
